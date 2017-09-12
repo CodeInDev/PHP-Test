@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" href="favicon.png">
+	<title>NPSS News</title>
+	<script src="jquery-3.2.1.min.js"></script>
+	<script>
+        function logincheck() {
+            if (sessionStorage.loggedin != 1) {
+                location.href = "index.html";
+            }
+        }
+
+		function store() {
+			var title = document.getElementById("title").value.trim();
+			var content = document.getElementById("content").value.trim();
+			if (title.length > 0) {
+				if (content.length > 0) {
+					$.ajax({ 
+						url: 'store.php',
+						data: {title: title, content: content},
+						type: 'POST',
+						success: function(output) {
+									alert(output);
+									location.reload();
+								}
+					});
+				} else {
+					document.getElementById("error2").innerHTML = "* Field must be filled out";
+                                        document.getElementById("error1").innerHTML = "";
+				}
+			} else {
+				document.getElementById("error1").innerHTML = "* Field must be filled out";
+			}
+		}
+		
+		function del(param) {
+			$.ajax({ 
+				url: 'delete.php',
+				data: {target: param.id},
+				type: 'POST',
+				success: function(output) {
+							alert(output);
+							retrieve();
+						}
+			});
+		}
+	
+		function retrieve() {
+			$.ajax({ 
+				url: 'retrieve.php',
+				type: 'GET',
+				success: function(output) {
+							if (output.slice(0, 11) == "Load failed") {
+								alert(output);
+							} else {
+								document.getElementById("output").innerHTML = "";
+								var posts = JSON.parse(output);
+								var count = 0;
+								while (posts.length > 0) {
+									var post = JSON.parse(posts.splice(0, 1));
+									var div = document.createElement("div");
+									var span = document.createElement("span");
+									var p = document.createElement("p");
+									document.getElementById("output").appendChild(div);
+									div.appendChild(span);
+									div.appendChild(p);
+									div.style.margin = "12px auto";
+									div.style.backgroundColor = "white";
+									div.style.border = "1px solid rgb(169, 169, 169)";
+									div.style.width = "500px";						
+									span.setAttribute("id", post.id);
+									span.setAttribute("onclick", "del(this)");
+									span.setAttribute("class", "delete");
+									span.innerHTML = "&times";
+									p.innerHTML = "<b>" + post.title + "</b><br>" + post.content;
+									p.style.padding = "8px";
+									p.style.margin = "0px";
+									count++;
+								}
+								document.getElementById("count").innerHTML = count + " Found";
+							}
+						}
+			});
+		}
+	</script>
+	<style>
+		* {
+			font-family: Calibri;
+		}
+
+        body {
+            padding: 12px 12px 24px 12px;
+            background-color: rgb(235, 235, 255);
+        }
+		
+		input[type=text] {
+			width: 200px;
+			padding: 6px;
+			margin: 0px 0px 8px 0px;
+		}
+		
+		textarea {
+			width: 202px;
+			padding: 6px;
+			resize: none;
+		}
+		
+		input[type=button] {
+			border: none;
+			display: inline-block;
+            background-color: white;
+            border: 1px solid rgb(169, 169, 169);
+			padding: 6px 12px;
+		}
+		
+		input[type=button]:active {
+			background-color: rgb(200, 200, 200);
+		}
+		
+		.error {
+			margin-left: 6px;
+			display: inline;
+			color: red;
+		}
+		
+		hr {
+			border: none;
+			border-bottom: 1px solid grey;
+			width: 100%;
+			margin: 24px 0px 16px 0px;
+		}
+		
+		.delete {
+			float: right;
+			height: 20px;
+			width: 20px;
+			font-size: 18px;
+			line-height: 20px;
+			text-align: center;
+			cursor: pointer;
+			transition-duration: 0.1s;
+		}
+		
+		.delete:hover {
+			background-color: red;
+		}
+	</style>
+</head>
+<body onload="logincheck(); retrieve()">
+	<h2>Simple Announcement Poster</h2>
+	<input type="text" id="title" placeholder="Post Title..."><p id="error1" class="error"></p>
+	<br>
+	<textarea rows="6" id="content" placeholder="Post Content..."></textarea><p id="error2" class="error"></p>
+	<br><br>
+	<input type="button" value="Post" onclick="store()">
+	<hr>
+	<h2 style="text-align:center">Posts</h2>
+    <h3 id="count" style="text-align:center"></h3>
+	<div id="output" style="width:100%"></div>
+</body>
+</html>
